@@ -1,13 +1,12 @@
-<script src="auth.js"></script>
-<script>
-  checkAuth();
-</script>
-
+<script src="auth.js"></script> 
+<script> checkAuth(); </script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <title>Neon Media Vault</title>
+
+<!-- 🔐 AUTH CHECK -->
 
 <style>
 :root {
@@ -72,6 +71,7 @@ header {
 
 /* CARD */
 .card {
+  position: relative;
   background: linear-gradient(
     145deg,
     rgba(255,255,255,0.12),
@@ -105,12 +105,6 @@ header {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-}
-
-/* VIDEO PREVIEW */
-.media video {
-  background: black;
 }
 
 /* NAME */
@@ -120,7 +114,29 @@ header {
   text-shadow: 0 0 8px rgba(0,255,255,.6);
 }
 
-/* VIEWER MODAL */
+/* BADGES */
+.badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0,0,0,.6);
+}
+
+.badge.cloudinary { color:#00ffff; border:1px solid #00ffff; }
+.badge.drive { color:#7f5cff; border:1px solid #7f5cff; }
+
+.size {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 11px;
+  opacity: .85;
+}
+
+/* VIEWER */
 .viewer {
   position: fixed;
   inset: 0;
@@ -131,14 +147,13 @@ header {
   justify-content: center;
   z-index: 9999;
 }
+.viewer.hidden { display:none; }
 
-.viewer.hidden { display: none; }
-
-#viewerContent img,
-#viewerContent video {
+#viewerContent iframe,
+#viewerContent video,
+#viewerContent img {
   max-width: 90%;
   max-height: 80%;
-  background: black;
 }
 
 #closeViewer {
@@ -157,6 +172,23 @@ header {
   border-radius: 10px;
   text-decoration: none;
 }
+
+.drive-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(127,92,255,0.25),
+    rgba(0,255,255,0.15)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  color: #7f5cff;
+  text-shadow: 0 0 12px rgba(127,92,255,.8);
+}
+
 </style>
 </head>
 
@@ -183,18 +215,39 @@ const search = document.getElementById("search");
 
 let allFiles = [];
 
-fetch("https://neon-media-vault-backend.onrender.com/files")
+fetch("http://localhost:5000/files")
   .then(r => r.json())
   .then(data => {
-    allFiles = data.cloudinary.map(f => ({
-      name: f.public_id.split("/").pop(),
-      type: f.resource_type,
-      url: f.secure_url
-    }));
+    allFiles = [
+      // CLOUDINARY (UNCHANGED)
+      ...data.cloudinary.map(f => ({
+        name: f.public_id.split("/").pop(),
+        type: f.resource_type,
+        url: f.secure_url,
+        size: f.bytes,
+        source: "cloudinary"
+      })),
+
+      // DRIVE (CUSTOM THUMB SUPPORT)
+      ...data.drive.map(f => ({
+        name: f.name,
+        type: f.mimeType.startsWith("video") ? "video" : "image",
+        thumb: f.thumbnailLink,
+        webViewLink: f.webViewLink,
+        webContentLink: f.webContentLink,
+        size: f.size,
+        source: "drive"
+      }))
+    ];
     render();
   });
 
 search.oninput = render;
+
+/* DRIVE CUSTOM THUMB (SAFE) */
+function getDriveThumbnail(fileName) {
+  return `/thumbnails/${fileName}.jpg`;
+}
 
 function render() {
   grid.innerHTML = "";
@@ -209,7 +262,8 @@ function render() {
       const media = document.createElement("div");
       media.className = "media";
 
-      if (f.type === "video") {
+      /* ───── CLOUDINARY VIDEO (DO NOT TOUCH) ───── */
+      if (f.type === "video" && f.source === "cloudinary") {
         const v = document.createElement("video");
         v.src = f.url;
         v.poster = f.url.replace("/upload/", "/upload/so_0/");
@@ -218,31 +272,47 @@ function render() {
         v.playsInline = true;
 
         card.onmouseenter = () => v.play().catch(()=>{});
-        card.onmouseleave = () => {
-          v.pause();
-          v.currentTime = 0;
-        };
+        card.onmouseleave = () => { v.pause(); v.currentTime = 0; };
 
-        card.onclick = () => openViewer(f);
         media.appendChild(v);
-      } else {
+      }
+
+      /* ───── DRIVE VIDEO (CUSTOM THUMB ONLY) ───── */
+      else if (f.type === "video" && f.source === "drive") {
         const img = document.createElement("img");
-        img.src = f.url;
-        card.onclick = () => openViewer(f);
+
+        img.src = getDriveThumbnail(f.name);
+        img.onerror = () => img.src = f.thumb; // fallback
+
         media.appendChild(img);
       }
+
+      /* ───── IMAGES ───── */
+      else {
+        const img = document.createElement("img");
+
+        if (f.source === "drive") {
+          img.src = getDriveThumbnail(f.name);
+          img.onerror = () => img.src = f.thumb;
+        } else {
+          img.src = f.url;
+        }
+
+        media.appendChild(img);
+      }
+
+      card.onclick = () => openViewer(f);
 
       const name = document.createElement("div");
       name.className = "name";
       name.textContent = f.name;
 
-      card.appendChild(media);
-      card.appendChild(name);
+      card.append(media, name);
       grid.appendChild(card);
     });
 }
 
-/* VIEWER LOGIC */
+/* VIEWER (UNCHANGED) */
 const viewer = document.getElementById("viewer");
 const viewerContent = document.getElementById("viewerContent");
 const closeViewer = document.getElementById("closeViewer");
@@ -256,22 +326,32 @@ closeViewer.onclick = () => {
 function openViewer(file) {
   viewerContent.innerHTML = "";
 
-  if (file.type === "video") {
+  if (file.source === "drive" && file.type === "video") {
+    const iframe = document.createElement("iframe");
+    iframe.src = file.webViewLink.replace("/view", "/preview");
+    iframe.allow = "autoplay";
+    viewerContent.appendChild(iframe);
+    downloadBtn.href = file.webContentLink;
+  }
+  else if (file.type === "video") {
     const v = document.createElement("video");
     v.src = file.url;
     v.controls = true;
     v.autoplay = true;
     viewerContent.appendChild(v);
-  } else {
+    downloadBtn.href = file.url + "?dl=true";
+  }
+  else {
     const img = document.createElement("img");
-    img.src = file.url;
+    img.src = file.url || file.thumb;
     viewerContent.appendChild(img);
+    downloadBtn.href = file.url || file.webContentLink;
   }
 
-  downloadBtn.href = file.url + "?dl=true";
   viewer.classList.remove("hidden");
 }
 </script>
+
 
 </body>
 </html>
