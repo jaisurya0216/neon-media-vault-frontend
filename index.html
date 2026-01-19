@@ -279,6 +279,7 @@ fetch("https://neon-media-vault-backend.onrender.com/files")
 
       // DRIVE (CUSTOM THUMB SUPPORT)
       ...data.drive.map(f => ({
+        id: f.id,
         name: f.name,
         type: f.mimeType.startsWith("video") ? "video" : "image",
         thumb: f.thumbnailLink,
@@ -379,21 +380,17 @@ closeViewer.onclick = () => {
 };
 
 function openViewer(file) {
-  // GOOGLE DRIVE VIDEO → OPEN IN NEW TAB ONLY
+
+  // ✅ GOOGLE DRIVE VIDEO (WORKS ON VERCEL)
   if (file.source === "drive" && file.type === "video") {
-    const a = document.createElement("a");
-    a.href = file.webViewLink;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const previewUrl = `https://drive.google.com/file/d/${file.id}/preview`;
+    window.open(previewUrl, "_blank", "noopener,noreferrer");
     return;
   }
 
   viewerContent.innerHTML = "";
 
-  // CLOUDINARY VIDEO
+  // ✅ CLOUDINARY VIDEO
   if (file.type === "video") {
     const v = document.createElement("video");
     v.src = file.url;
@@ -402,7 +399,8 @@ function openViewer(file) {
     viewerContent.appendChild(v);
     downloadBtn.href = file.url + "?dl=true";
   }
-  // IMAGE
+
+  // ✅ IMAGE
   else {
     const img = document.createElement("img");
     img.src = file.url || file.thumb;
