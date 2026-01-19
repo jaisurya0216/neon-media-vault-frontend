@@ -178,7 +178,7 @@ const search = document.getElementById("search");
 
 let allFiles = [];
 
-fetch("http://localhost:5000/files")
+fetch("https://neon-media-vault-backend.onrender.com/files")
   .then(r => r.json())
   .then(data => {
     allFiles = data.cloudinary.map(f => ({
