@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Neon Media Vault</title>
+
+<style>
+:root {
+  --neon1: #00ffff;
+  --neon2: #7f5cff;
+  --bg1: #050510;
+  --bg2: #0b0b22;
+  --glass: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.15);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 10%, #1b1b55, transparent 40%),
+    radial-gradient(circle at 80% 80%, #3a1c6b, transparent 40%),
+    linear-gradient(180deg, var(--bg2), var(--bg1));
+  font-family: "Inter", "Segoe UI", monospace;
+  color: white;
+}
+
+/* HEADER */
+header {
+  padding: 28px;
+  text-align: center;
+  font-size: 34px;
+  letter-spacing: 3px;
+  background: linear-gradient(90deg, var(--neon1), var(--neon2));
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 20px rgba(127,92,255,.6);
+}
+
+/* SEARCH */
+.search {
+  max-width: 620px;
+  margin: 0 auto 30px;
+}
+
+.search input {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  backdrop-filter: blur(15px);
+  color: white;
+  font-size: 16px;
+  outline: none;
+}
+
+/* GRID */
+.grid {
+  padding: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 30px;
+}
+
+/* CARD */
+.card {
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.12),
+    rgba(255,255,255,0.02)
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 12px;
+  transition: transform .3s ease, box-shadow .3s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow:
+    0 0 25px rgba(0,255,255,.5),
+    0 0 60px rgba(127,92,255,.4);
+}
+
+/* MEDIA */
+.media {
+  width: 100%;
+  height: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.media img,
+.media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* VIDEO PREVIEW */
+.media video {
+  background: black;
+}
+
+/* NAME */
+.name {
+  margin-top: 10px;
+  font-size: 14px;
+  text-shadow: 0 0 8px rgba(0,255,255,.6);
+}
+
+/* VIEWER MODAL */
+.viewer {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.viewer.hidden { display: none; }
+
+#viewerContent img,
+#viewerContent video {
+  max-width: 90%;
+  max-height: 80%;
+  background: black;
+}
+
+#closeViewer {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+#downloadBtn {
+  margin-top: 16px;
+  color: #00ffff;
+  border: 1px solid #00ffff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+}
+</style>
+</head>
+
+<body>
+
+<header>⚡ NEON MEDIA VAULT</header>
+
+<div class="search">
+  <input id="search" placeholder="Search your vault…" />
+</div>
+
+<div class="grid" id="grid"></div>
+
+<!-- VIEWER -->
+<div id="viewer" class="viewer hidden">
+  <span id="closeViewer">✕</span>
+  <div id="viewerContent"></div>
+  <a id="downloadBtn" target="_blank">⬇ Download</a>
+</div>
+
+<script>
+const grid = document.getElementById("grid");
+const search = document.getElementById("search");
+
+let allFiles = [];
+
+fetch("http://localhost:5000/files")
+  .then(r => r.json())
+  .then(data => {
+    allFiles = data.cloudinary.map(f => ({
+      name: f.public_id.split("/").pop(),
+      type: f.resource_type,
+      url: f.secure_url
+    }));
+    render();
+  });
+
+search.oninput = render;
+
+function render() {
+  grid.innerHTML = "";
+  const q = search.value.toLowerCase();
+
+  allFiles
+    .filter(f => f.name.toLowerCase().includes(q))
+    .forEach(f => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const media = document.createElement("div");
+      media.className = "media";
+
+      if (f.type === "video") {
+        const v = document.createElement("video");
+        v.src = f.url;
+        v.poster = f.url.replace("/upload/", "/upload/so_0/");
+        v.muted = true;
+        v.loop = true;
+        v.playsInline = true;
+
+        card.onmouseenter = () => v.play().catch(()=>{});
+        card.onmouseleave = () => {
+          v.pause();
+          v.currentTime = 0;
+        };
+
+        card.onclick = () => openViewer(f);
+        media.appendChild(v);
+      } else {
+        const img = document.createElement("img");
+        img.src = f.url;
+        card.onclick = () => openViewer(f);
+        media.appendChild(img);
+      }
+
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = f.name;
+
+      card.appendChild(media);
+      card.appendChild(name);
+      grid.appendChild(card);
+    });
+}
+
+/* VIEWER LOGIC */
+const viewer = document.getElementById("viewer");
+const viewerContent = document.getElementById("viewerContent");
+const closeViewer = document.getElementById("closeViewer");
+const downloadBtn = document.getElementById("downloadBtn");
+
+closeViewer.onclick = () => {
+  viewer.classList.add("hidden");
+  viewerContent.innerHTML = "";
+};
+
+function openViewer(file) {
+  viewerContent.innerHTML = "";
+
+  if (file.type === "video") {
+    const v = document.createElement("video");
+    v.src = file.url;
+    v.controls = true;
+    v.autoplay = true;
+    viewerContent.appendChild(v);
+  } else {
+    const img = document.createElement("img");
+    img.src = file.url;
+    viewerContent.appendChild(img);
+  }
+
+  downloadBtn.href = file.url + "?dl=true";
+  viewer.classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
