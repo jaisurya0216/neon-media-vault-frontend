@@ -1,0 +1,159 @@
+:root {
+  --neon1: #00ffff;
+  --neon2: #7f5cff;
+  --bg1: #050510;
+  --bg2: #0b0b22;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: "Inter", "Segoe UI", monospace;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  background:
+    radial-gradient(circle at 20% 15%, #1b1b55, transparent 40%),
+    radial-gradient(circle at 80% 80%, #3a1c6b, transparent 40%),
+    linear-gradient(180deg, var(--bg2), var(--bg1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Animated glow */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center,
+    rgba(127,92,255,0.18),
+    transparent 70%);
+  animation: pulse 6s infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+/* Wrapper */
+.login-wrapper {
+  position: relative;
+  z-index: 2;
+}
+
+/* Card */
+.login-card {
+  width: 390px;
+  padding: 42px 36px;
+  border-radius: 22px;
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.14),
+    rgba(255,255,255,0.03)
+  );
+  backdrop-filter: blur(28px);
+  border: 1px solid rgba(255,255,255,0.2);
+  text-align: center;
+  box-shadow:
+    0 0 30px rgba(0,255,255,0.35),
+    0 0 90px rgba(127,92,255,0.35);
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Logo */
+.logo {
+  font-size: 48px;
+  margin-bottom: 10px;
+  color: var(--neon1);
+  text-shadow:
+    0 0 15px var(--neon1),
+    0 0 35px var(--neon2);
+}
+
+/* Headings */
+.login-card h1 {
+  margin: 0;
+  font-size: 28px;
+  background: linear-gradient(90deg, var(--neon1), var(--neon2));
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  margin-bottom: 26px;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+/* Inputs */
+.login-card input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  font-size: 15px;
+  outline: none;
+}
+
+.login-card input::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+
+.login-card input:focus {
+  border-color: var(--neon1);
+  box-shadow: 0 0 14px var(--neon1);
+}
+
+/* Button */
+.login-card button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  border-radius: 14px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(90deg, var(--neon1), var(--neon2));
+  color: black;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.login-card button:hover {
+  transform: scale(1.05);
+  box-shadow:
+    0 0 25px var(--neon1),
+    0 0 45px var(--neon2);
+}
+
+/* Error */
+.error {
+  margin-top: 12px;
+  color: #ff6b6b;
+  min-height: 18px;
+}
+
+/* Shake animation */
+.shake {
+  animation: shake .4s;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-6px); }
+  100% { transform: translateX(0); }
+}
