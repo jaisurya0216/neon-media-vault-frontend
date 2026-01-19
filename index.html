@@ -379,9 +379,7 @@ closeViewer.onclick = () => {
 };
 
 function openViewer(file) {
-  viewerContent.innerHTML = "";
-
-  // ✅ Google Drive video (production-safe)
+  // GOOGLE DRIVE VIDEO → OPEN IN NEW TAB ONLY
   if (file.source === "drive" && file.type === "video") {
     const a = document.createElement("a");
     a.href = file.webViewLink;
@@ -393,7 +391,9 @@ function openViewer(file) {
     return;
   }
 
-  // Cloudinary video
+  viewerContent.innerHTML = "";
+
+  // CLOUDINARY VIDEO
   if (file.type === "video") {
     const v = document.createElement("video");
     v.src = file.url;
@@ -402,8 +402,7 @@ function openViewer(file) {
     viewerContent.appendChild(v);
     downloadBtn.href = file.url + "?dl=true";
   }
-
-  // Images
+  // IMAGE
   else {
     const img = document.createElement("img");
     img.src = file.url || file.thumb;
