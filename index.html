@@ -383,10 +383,8 @@ function openViewer(file) {
   viewerContent.innerHTML = "";
 
   if (file.source === "drive" && file.type === "video") {
-    const iframe = document.createElement("iframe");
-    iframe.src = file.webViewLink.replace("/view", "/preview");
-    iframe.allow = "autoplay";
-    viewerContent.appendChild(iframe);
+    window.open(file.webViewLink, "_blank");
+    return;
     downloadBtn.href = file.webContentLink;
   }
   else if (file.type === "video") {
