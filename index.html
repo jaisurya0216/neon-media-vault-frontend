@@ -305,75 +305,65 @@ function render() {
   grid.innerHTML = "";
   const q = search.value.toLowerCase();
 
+  // ✅ build visibleFiles ONCE
   visibleFiles = allFiles.filter(f => {
-  const matchesSearch = f.name.toLowerCase().includes(q);
-  const matchesType =
-    currentFilter === "all" || f.type === currentFilter;
-  return matchesSearch && matchesType;
-});
-
-visibleFiles.forEach((f, i) => {
     const matchesSearch = f.name.toLowerCase().includes(q);
     const matchesType =
       currentFilter === "all" || f.type === currentFilter;
-
     return matchesSearch && matchesType;
-  })
-  .forEach(f => {
+  });
+
+  // ✅ render + keep index
+  visibleFiles.forEach((f, i) => {
     const card = document.createElement("div");
     card.className = "card";
 
     const media = document.createElement("div");
     media.className = "media";
 
-      /* ───── CLOUDINARY VIDEO (DO NOT TOUCH) ───── */
-      if (f.type === "video" && f.source === "cloudinary") {
-        const v = document.createElement("video");
-        v.src = f.url;
-        v.poster = f.url.replace("/upload/", "/upload/so_0/");
-        v.muted = true;
-        v.loop = true;
-        v.playsInline = true;
+    // CLOUDINARY VIDEO
+    if (f.type === "video" && f.source === "cloudinary") {
+      const v = document.createElement("video");
+      v.src = f.url;
+      v.poster = f.url.replace("/upload/", "/upload/so_0/");
+      v.muted = true;
+      v.loop = true;
+      v.playsInline = true;
 
-        card.onmouseenter = () => v.play().catch(()=>{});
-        card.onmouseleave = () => { v.pause(); v.currentTime = 0; };
+      card.onmouseenter = () => v.play().catch(()=>{});
+      card.onmouseleave = () => { v.pause(); v.currentTime = 0; };
 
-        media.appendChild(v);
-      }
+      media.appendChild(v);
+    }
 
-      /* ───── DRIVE VIDEO (CUSTOM THUMB ONLY) ───── */
-      else if (f.type === "video" && f.source === "drive") {
-        const img = document.createElement("img");
+    // DRIVE VIDEO (thumbnail only)
+    else if (f.type === "video" && f.source === "drive") {
+      const img = document.createElement("img");
+      img.src = getDriveThumbnail(f.name);
+      img.onerror = () => img.src = f.thumb;
+      media.appendChild(img);
+    }
 
-        img.src = getDriveThumbnail(f.name);
-        img.onerror = () => img.src = f.thumb; // fallback
+    // IMAGES
+    else {
+      const img = document.createElement("img");
+      img.src = f.source === "drive"
+        ? getDriveThumbnail(f.name)
+        : f.url;
+      img.onerror = () => img.src = f.thumb;
+      media.appendChild(img);
+    }
 
-        media.appendChild(img);
-      }
+    // ✅ index-based open
+    card.onclick = () => openViewerByIndex(i);
 
-      /* ───── IMAGES ───── */
-      else {
-        const img = document.createElement("img");
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = f.name;
 
-        if (f.source === "drive") {
-          img.src = getDriveThumbnail(f.name);
-          img.onerror = () => img.src = f.thumb;
-        } else {
-          img.src = f.url;
-        }
-
-        media.appendChild(img);
-      }
-
-      card.onclick = () => openViewerByIndex(i);
-
-      const name = document.createElement("div");
-      name.className = "name";
-      name.textContent = f.name;
-
-      card.append(media, name);
-      grid.appendChild(card);
-    });
+    card.append(media, name);
+    grid.appendChild(card);
+  });
 }
 
 /* VIEWER (UNCHANGED) */
