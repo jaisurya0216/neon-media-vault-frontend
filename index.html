@@ -261,7 +261,9 @@ document.querySelectorAll(".filter-btn").forEach(btn => {
   };
 });
 
-
+let currentIndex = -1;
+let visibleFiles = [];
+  
 let allFiles = [];
 
 fetch("https://neon-media-vault-backend.onrender.com/files")
@@ -303,8 +305,14 @@ function render() {
   grid.innerHTML = "";
   const q = search.value.toLowerCase();
 
-  allFiles
-  .filter(f => {
+  visibleFiles = allFiles.filter(f => {
+  const matchesSearch = f.name.toLowerCase().includes(q);
+  const matchesType =
+    currentFilter === "all" || f.type === currentFilter;
+  return matchesSearch && matchesType;
+});
+
+visibleFiles.forEach((f, i) => {
     const matchesSearch = f.name.toLowerCase().includes(q);
     const matchesType =
       currentFilter === "all" || f.type === currentFilter;
@@ -357,7 +365,7 @@ function render() {
         media.appendChild(img);
       }
 
-      card.onclick = () => openViewer(f);
+      card.onclick = () => openViewerByIndex(i);
 
       const name = document.createElement("div");
       name.className = "name";
@@ -410,6 +418,55 @@ function openViewer(file) {
 
   viewer.classList.remove("hidden");
 }
+function openViewerByIndex(index) {
+  const file = visibleFiles[index];
+  if (!file) return;
+
+  currentIndex = index;
+
+  // GOOGLE DRIVE VIDEO → keep current behavior
+  if (file.source === "drive" && file.type === "video") {
+    const previewUrl = `https://drive.google.com/file/d/${file.id}/preview`;
+    window.open(previewUrl, "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  // Reuse your existing viewer logic
+  openViewer(file);
+}
+
+/* NEXT / PREV */
+function showNext() {
+  if (currentIndex < visibleFiles.length - 1) {
+    openViewerByIndex(currentIndex + 1);
+  }
+}
+
+function showPrev() {
+  if (currentIndex > 0) {
+    openViewerByIndex(currentIndex - 1);
+  }
+}
+
+/* KEYBOARD SUPPORT */
+document.addEventListener("keydown", e => {
+  if (viewer.classList.contains("hidden")) return;
+  if (e.key === "ArrowRight") showNext();
+  if (e.key === "ArrowLeft") showPrev();
+});
+
+/* MOBILE SWIPE */
+let startX = 0;
+
+viewer.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+
+viewer.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX - endX > 50) showNext();
+  if (endX - startX > 50) showPrev();
+});
 </script>
 
 
