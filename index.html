@@ -391,7 +391,7 @@ function render() {
   const v = document.createElement("video");
 
   // streamable Drive link
-  v.src = `https://drive.google.com/uc?export=download&id=${f.id}`;
+  v.src = `https://drive.google.com/thumbnail?id=${f.id}&sz=w1000`;
 
   v.muted = true;
   v.loop = true;
