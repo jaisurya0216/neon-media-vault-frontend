@@ -388,11 +388,29 @@ function render() {
 
     // DRIVE VIDEO (thumbnail only)
     else if (f.type === "video" && f.source === "drive") {
-      const img = document.createElement("img");
-      img.src = getDriveThumbnail(f.name);
-      img.onerror = () => img.src = f.thumb;
-      media.appendChild(img);
-    }
+  const v = document.createElement("video");
+
+  // streamable Drive link
+  v.src = `https://drive.google.com/uc?export=download&id=${f.id}`;
+
+  v.muted = true;
+  v.loop = true;
+  v.playsInline = true;
+  v.preload = "metadata";
+
+  // thumbnail first
+  v.poster = f.thumb || getDriveThumbnail(f.name);
+
+  // 🔥 hover preview
+  card.onmouseenter = () => v.play().catch(()=>{});
+  card.onmouseleave = () => {
+    v.pause();
+    v.currentTime = 0;
+  };
+
+  media.appendChild(v);
+}
+
 
     // IMAGES
     else {
