@@ -325,6 +325,7 @@ function render() {
     if (f.type === "video" && f.source === "cloudinary") {
       const v = document.createElement("video");
       v.src = f.url;
+      v.preload = "none";
       v.poster = f.url.replace("/upload/", "/upload/so_0/");
       v.muted = true;
       v.loop = true;
