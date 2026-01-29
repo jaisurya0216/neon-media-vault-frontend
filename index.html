@@ -359,10 +359,39 @@ function render() {
     card.onclick = () => openViewerByIndex(i);
 
     const name = document.createElement("div");
-    name.className = "name";
-    name.textContent = f.name;
+name.className = "name";
+name.textContent = f.name;
 
-    card.append(media, name);
+/* ✨ RENAME FEATURE */
+name.ondblclick = () => {
+  const input = document.createElement("input");
+  input.value = f.name;
+  input.style.width = "100%";
+  input.style.background = "rgba(0,0,0,.6)";
+  input.style.color = "white";
+  input.style.border = "1px solid #00ffff";
+  input.style.borderRadius = "6px";
+  input.style.padding = "4px";
+
+  name.replaceWith(input);
+  input.focus();
+  input.select();
+
+  function save() {
+    const newName = input.value.trim();
+    if (newName) f.name = newName; // update local only
+    input.replaceWith(name);
+    name.textContent = f.name;
+  }
+
+  input.onblur = save;
+  input.onkeydown = e => {
+    if (e.key === "Enter") save();
+    if (e.key === "Escape") input.replaceWith(name);
+  };
+};
+
+card.append(media, name);
     grid.appendChild(card);
   });
 }
