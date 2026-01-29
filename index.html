@@ -356,7 +356,10 @@ function render() {
     }
 
     // ✅ index-based open
-    card.onclick = () => openViewerByIndex(i);
+    card.addEventListener("click", (e) => {
+  if (e.target.classList.contains("name")) return; // ignore rename clicks
+  openViewerByIndex(i);
+});
 
     const name = document.createElement("div");
 name.className = "name";
