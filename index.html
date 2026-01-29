@@ -296,7 +296,7 @@ fetch("https://neon-media-vault-backend.onrender.com/files")
   .then(data => {
     allFiles = [
       // CLOUDINARY (UNCHANGED)
-      ...data.cloudinary.map(f => ({
+      ...data.cloudinary.map((f,i) => ({
         name: f.public_id.split("/").pop(),
         type: f.resource_type,
         url: f.secure_url,
@@ -308,7 +308,7 @@ fetch("https://neon-media-vault-backend.onrender.com/files")
       })),
 
       // DRIVE (CUSTOM THUMB SUPPORT)
-      ...data.drive.map(f => ({
+      ...data.drive.map((f,i)=> ({
         id: f.id,
         name: f.name,
         type: f.mimeType.startsWith("video") ? "video" : "image",
