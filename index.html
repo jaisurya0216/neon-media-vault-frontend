@@ -464,8 +464,13 @@ function openViewer(file) {
 
   // ✅ GOOGLE DRIVE VIDEO (WORKS ON VERCEL)
   if (file.source === "drive" && file.type === "video") {
-    const previewUrl = `https://drive.google.com/file/d/${file.id}/preview`;
-    window.open(previewUrl, "_blank", "noopener,noreferrer");
+    const v = document.createElement("video");
+    v.src = file.webContentLink;
+    v.controls = true;
+    v.autoplay = true;
+    viewerContent.appendChild(v);
+    downloadBtn.href = file.webContentLink;
+    viewer.classList.remove("hidden");
     return;
   }
 
