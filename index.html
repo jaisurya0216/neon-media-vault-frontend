@@ -330,32 +330,33 @@ function render() {
   grid.innerHTML = "";
   const q = search.value.toLowerCase();
 
-  // ✅ build visibleFiles ONCE
+  /* ✅ FILTER FIRST */
   visibleFiles = allFiles.filter(f => {
-    // ✅ SORTING
-visibleFiles.sort((a, b) => {
-  if (currentSort === "name") {
-    return a.name.localeCompare(b.name);
-  }
-
-  if (currentSort === "size") {
-    return (b.size || 0) - (a.size || 0);
-  }
-
-  if (currentSort === "oldest") {
-    return (a.created_at || 0) - (b.created_at || 0);
-  }
-
-  // default = newest
-  return (b.created_at || 0) - (a.created_at || 0);
-});
     const matchesSearch = f.name.toLowerCase().includes(q);
     const matchesType =
       currentFilter === "all" || f.type === currentFilter;
     return matchesSearch && matchesType;
   });
 
-  // ✅ render + keep index
+  /* ✅ SORT AFTER FILTER */
+  visibleFiles.sort((a, b) => {
+    if (currentSort === "name") {
+      return a.name.localeCompare(b.name);
+    }
+
+    if (currentSort === "size") {
+      return (b.size || 0) - (a.size || 0);
+    }
+
+    if (currentSort === "oldest") {
+      return (a.created_at || 0) - (b.created_at || 0);
+    }
+
+    // default newest
+    return (b.created_at || 0) - (a.created_at || 0);
+  });
+
+  /* ✅ THEN RENDER */
   visibleFiles.forEach((f, i) => {
     const card = document.createElement("div");
     card.className = "card";
