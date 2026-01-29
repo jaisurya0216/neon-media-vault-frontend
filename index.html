@@ -363,7 +363,8 @@ name.className = "name";
 name.textContent = f.name;
 
 /* ✨ RENAME FEATURE */
-name.ondblclick = () => {
+name.ondblclick = (e) => {
+  e.stopPropagation();
   const input = document.createElement("input");
   input.value = f.name;
   input.style.width = "100%";
