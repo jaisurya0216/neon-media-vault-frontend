@@ -301,6 +301,7 @@ fetch("https://neon-media-vault-backend.onrender.com/files")
         type: f.resource_type,
         url: f.secure_url,
         size: f.bytes,
+        created_at: new Date(f.created_at).getTime(),
         source: "cloudinary"
       })),
 
@@ -313,6 +314,7 @@ fetch("https://neon-media-vault-backend.onrender.com/files")
         webViewLink: f.webViewLink,
         webContentLink: f.webContentLink,
         size: f.size,
+        created_at: new Date(f.createdTime).getTime(),
         source: "drive"
       }))
     ];
